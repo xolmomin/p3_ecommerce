@@ -10,6 +10,7 @@ from django.utils.text import slugify
 class UserManager(BaseUserManager):
 
     def create_user(self, email, password=None, **extra_fields):
+
         if not email:
             raise ValueError('Users must have a phone number!')
 
