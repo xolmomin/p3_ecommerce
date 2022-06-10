@@ -85,15 +85,3 @@ class Profile(Model):
     email = EmailField(max_length=255, null=True)
     heading = CharField(max_length=100, null=True)
     intro = CharField(max_length=500, null=True)
-
-
-"""
-ForeignKey
-ManyToManyField
-OneToOneField
-
-1-n
-n-1
-n-n
-1-1
-"""
