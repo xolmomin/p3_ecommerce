@@ -1,7 +1,8 @@
+from django.contrib.auth import authenticate, login
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 
-from app.forms import ProductModelForm, CustomerModelForm
+from app.forms import ProductModelForm, UserModelForm, LoginForm
 from app.models import *
 
 
@@ -20,9 +21,12 @@ def add_product(request):
     return render(request, 'app/add-product.html', context)
 
 
-def index(request):
-    products = Product.objects.all()
-    # print(products.query)
+def index(request, category_slug=None):
+    if category_slug:
+        products = Product.objects.filter(category__slug=category_slug)
+    else:
+        products = Product.objects.all()
+
     page = request.GET.get('page', 1)
     paginator = Paginator(products, 3)  # 5 users per page
 
@@ -85,7 +89,7 @@ def list_users(request):
 
 # customers
 def customers(request):
-    customer = Customer.objects.all()
+    customer = User.objects.all()
 
     context = {
         'customers': customer
@@ -94,13 +98,38 @@ def customers(request):
     return render(request, 'app/customers.html', context)
 
 
+def login_page(request):
+
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        form.is_valid()
+        user = authenticate(email=form.cleaned_data['email'], password=form.cleaned_data['password'])
+        if user:
+            login(request, user)
+        return redirect('index')
+        # email = request.POST.get('email')
+        # password = request.POST.get('password')
+
+
+
+    return render(request, 'app/auth/login.html')
+
+def register_page(request):
+    return render(request, 'app/auth/register.html')
+
+
 def category(request):
-    context = {}
+    categories = Category.objects.filter(parent__isnull=True)
+    product_count = Product.objects.filter(category_id__in=categories.values_list('id', flat=True)).count()
+    context = {
+        'categories': categories,
+        'product_count': product_count
+    }
     return render(request, 'app/category.html', context)
 
 
 def customer_details(request, customer_id):
-    customer = Customer.objects.filter(id=customer_id).first()
+    customer = User.objects.filter(id=customer_id).first()
     print(customer)
     context = {
         'customer': customer
@@ -109,17 +138,17 @@ def customer_details(request, customer_id):
 
 
 def customer_delete(request, customer_id):
-    customer = Customer.objects.filter(id=customer_id).first()
+    customer = User.objects.filter(id=customer_id).first()
     if customer:
         customer.delete()
     return redirect('customers')
 
 
 def customer_update(request, customer_id):
-    customer = Customer.objects.filter(id=customer_id).first()
-    form = CustomerModelForm(instance=customer)
+    customer = User.objects.filter(id=customer_id).first()
+    form = UserModelForm(instance=customer)
     if request.method == 'POST':
-        form = CustomerModelForm(request.POST, instance=customer)
+        form = UserModelForm(request.POST, instance=customer)
         if form.is_valid():
             form.save()
         return redirect('customers')
@@ -132,10 +161,10 @@ def customer_update(request, customer_id):
 
 
 def customer_add(request):
-    form = CustomerModelForm()
+    form = UserModelForm()
 
     if request.method == 'POST':
-        form = CustomerModelForm(request.POST)
+        form = UserModelForm(request.POST)
         if form.is_valid():
             form.save()
         return redirect('customers')

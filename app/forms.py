@@ -1,6 +1,7 @@
+from django.core.exceptions import ValidationError
 from django.forms import Form, ModelForm, forms, CharField, EmailField, PasswordInput
 
-from app.models import Product,Customer
+from app.models import Product, User
 
 
 class ProductForm(Form):
@@ -17,15 +18,24 @@ class ProductModelForm(ModelForm):
         exclude = ()
 
 
-class CustomerForm(Form):
+class UserForm(Form):
     full_name = CharField()
     email = EmailField()
     address = CharField()
+# botir@mail.ru
 
-class CustomerModelForm(ModelForm):
-     class Meta:
-        model = Customer
+class LoginForm(Form):
+    email = EmailField()
+    password = CharField(max_length=255)
+
+    def clean_email(self):
+        email = self.data.get('email')
+        if not User.objects.filter(email=email).exists():
+            raise ValidationError('Bunday email yoq')
+        return email
+
+
+class UserModelForm(ModelForm):
+    class Meta:
+        model = User
         exclude = ()
-
-
-
