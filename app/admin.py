@@ -8,7 +8,7 @@ from app.models import Product, Category, User
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['id', 'title', 'price', 'amount']
     # fields = ['title', 'price', 'description']
-
+#
 
 #
 # admin.site.register(Product)
