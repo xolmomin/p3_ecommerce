@@ -1,7 +1,7 @@
 from django.urls import path
 
 from app.views import index, product_details, order_list, customers, order_details, add_product, customer_details, \
-    customer_add, customer_delete, customer_update, category, login_page, register_page
+    customer_add, customer_delete, customer_update, category, login_page, register_page, logout_page
 
 urlpatterns = [
     path('', index, name='index'),
@@ -20,5 +20,6 @@ urlpatterns = [
     path('customer-delete/<int:customer_id>', customer_delete, name='customer_delete'),
 
     path('login/', login_page, name='login_page'),
+    path('logout/', logout_page, name='logout_page'),
     path('register/', register_page, name='register_page'),
 ]

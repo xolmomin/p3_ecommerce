@@ -471,7 +471,7 @@
                                             <!-- more inner pages-->
                                         </li>
                                         <li class="nav-item"><a class="nav-link"
-                                                                href="../pages/authentication/simple/logout.html"
+                                                                href="{% url 'logout_page' %}"
                                                                 aria-expanded="false">
                                             <div class="d-flex align-items-center"><span class="nav-link-text ps-1">Logout</span>
                                             </div>
@@ -1997,8 +1997,12 @@
             </div>
         </nav>
         <div class="content">
+
+            {% include 'app/base/_navbar.html' %}
             {% block main_content %}
             {% endblock %}
+            {% include 'app/base/_footer.html' %}
+
         </div>
         <div class="modal fade" id="authentication-modal" tabindex="-1" role="dialog"
              aria-labelledby="authentication-modal-label" aria-hidden="true">

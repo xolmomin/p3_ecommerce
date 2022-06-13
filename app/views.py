@@ -1,8 +1,9 @@
-from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 
-from app.forms import ProductModelForm, UserModelForm, LoginForm
+from app.forms import ProductModelForm, UserModelForm, LoginForm, RegisterForm
 from app.models import *
 
 
@@ -99,23 +100,41 @@ def customers(request):
 
 
 def login_page(request):
-
+    form = LoginForm()
     if request.method == 'POST':
         form = LoginForm(request.POST)
-        form.is_valid()
-        user = authenticate(email=form.cleaned_data['email'], password=form.cleaned_data['password'])
-        if user:
-            login(request, user)
-        return redirect('index')
+        if form.is_valid():
+            user = authenticate(email=form.cleaned_data['email'], password=form.cleaned_data['password'])
+            if user:
+                login(request, user)
+            return redirect('index')
+        else:
+            messages.add_message(
+                request,
+                level=messages.ERROR,
+                message='Loginda xatolik'
+            )
         # email = request.POST.get('email')
         # password = request.POST.get('password')
+    return render(request, 'app/auth/login.html', {'form':form})
 
 
+def logout_page(request):
+    logout(request)
+    return render(request, 'app/auth/logout.html')
 
-    return render(request, 'app/auth/login.html')
 
 def register_page(request):
-    return render(request, 'app/auth/register.html')
+    form = RegisterForm()
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login_page')
+            # user = authenticate(email=form.cleaned_data['email'], password=form.cleaned_data['password'])
+            # if user:
+            #     login(request, user)
+    return render(request, 'app/auth/register.html', {'form': form})
 
 
 def category(request):

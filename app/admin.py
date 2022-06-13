@@ -16,8 +16,11 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'id', 'slug']
+    search_fields = ['name']
+    list_display = ['name', 'id', 'slug', 'product_count']
     fields = ['image', 'name']
 
+    def product_count(self, obj):
+        return obj.product_set.count()
 
 admin.site.register(User, UserAdmin)
