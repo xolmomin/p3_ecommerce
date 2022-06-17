@@ -1,9 +1,18 @@
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from django.db.transaction import atomic
 from django.forms import Form, ModelForm, CharField, EmailField
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode
+from jwt.utils import force_bytes
 
 from app.models import Product, User
+from app.token import account_activation_token
+from p3_ecommerce.settings import EMAIL_HOST_USER
 
 
 class ProductForm(Form):
@@ -24,6 +33,51 @@ class UserForm(Form):
     full_name = CharField()
     email = EmailField()
     address = CharField()
+
+
+# botir@mail.ru
+
+
+class UserModelForm(ModelForm):
+    class Meta:
+        model = User
+        exclude = ()
+
+
+class LoginForm(AuthenticationForm):
+    username = CharField(required=False)
+    email = EmailField()
+    password = CharField(max_length=255)
+
+    def clean_email(self):
+        email = self.data.get('email')
+        if not User.objects.filter(email=email).exists():
+            raise ValidationError('Bunday email yoq')
+        return email
+
+    def clean_password(self):
+        email = self.data.get('email')
+        password = self.data.get('password')
+
+        user = User.objects.get(email=email)
+        if not user.check_password(password):
+            raise ValidationError('Parol xato')
+        return password
+
+    def clean(self):
+        email = self.cleaned_data.get('email')
+        password = self.cleaned_data.get('password')
+
+        if email is not None and password:
+            self.user_cache = authenticate(
+                self.request, email=email, password=password
+            )
+            if self.user_cache is None:
+                raise self.get_invalid_login_error()
+            else:
+                self.confirm_login_allowed(self.user_cache)
+
+        return self.cleaned_data
 
 
 class RegisterForm(Form):
@@ -48,7 +102,7 @@ class RegisterForm(Form):
         password = self.data.get('password')
         confirm_password = self.data.get('confirm_password')
         if password != confirm_password:
-            raise ValidationError('Tasdiqlash paroli xato')
+            raise ValidationError('tasdiqlash paroli xato')
         return password
 
     @atomic
@@ -56,33 +110,36 @@ class RegisterForm(Form):
         user = User.objects.create_user(
             username=self.cleaned_data.get('username'),
             email=self.cleaned_data.get('email'),
-            password=self.cleaned_data.get('password'),
+            is_active=False
         )
         user.set_password(self.cleaned_data.get('password'))
         user.save()
 
-class LoginForm(Form):
+
+class ForgotPasswordForm(Form):
     email = EmailField()
-    password = CharField(max_length=255)
 
     def clean_email(self):
-        email = self.data.get('email')
+        email = self.cleaned_data.get('email')
         if not User.objects.filter(email=email).exists():
-            raise ValidationError('Bunday email yoq')
+            raise ValidationError('This profile is not registered')
         return email
 
-    def clean_password(self):
-        email = self.cleaned_data.get('email')
-        if email:
-            password = self.data.get('password')
 
-            user = User.objects.get(email=email)
-            if not user.check_password(password):
-                raise ValidationError('Parol xato')
-            return password
+def send_email(email, request, _type):
 
+    user = User.objects.get(email=email)
+    subject = 'Activate your account'
+    current_site = get_current_site(request)
+    message = render_to_string('app/auth/activation-account.html', {
+        'user': user,
+        'domain': current_site.domain,
+        'uid': urlsafe_base64_encode(force_bytes(str(user.pk))),
+        'token': account_activation_token.make_token(user),
+    })
 
-class UserModelForm(ModelForm):
-    class Meta:
-        model = User
-        exclude = ()
+    from_email = EMAIL_HOST_USER
+    recipient_list = [email]
+
+    result = send_mail(subject, message, from_email, recipient_list)
+    print('Send to MAIL')

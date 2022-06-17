@@ -8,16 +8,15 @@
 {% block main_content %}
     <div class="card-body p-4 p-sm-5">
         <div class="row flex-between-center mb-2" style="color: red">
-            {% comment %}{% if messages %}
+            {% if messages %}
                 {% for message in messages %}
                     <p>{{ message }}</p>
                 {% endfor %}
-            {% endif %}{% endcomment %}
+            {% endif %}
 
             {% if form.errors %}
                 <p>{{ form.errors }}</p>
             {% endif %}
-
         </div>
         <div class="row flex-between-center mb-2">
             <div class="col-auto">
@@ -45,11 +44,11 @@
                     </div>
                 </div>
                 <div class="col-auto"><a class="fs--1"
-                                         href="../../../pages/authentication/simple/forgot-password.html">Forgot
+                                         href="{% url 'forgot_password' %}">Forgot
                     Password?</a></div>
             </div>
             <div class="mb-3">
-                <button class="btn btn-primary d-block w-100 mt-3" type="submit" name="submit">Log in
+                <button class="btn btn-primary d-block w-100 mt-3" type="submit">Log in
                 </button>
             </div>
         </form>
