@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'app'
+    'app',
+    'mptt',
+
 ]
 
 MIDDLEWARE = [
@@ -123,6 +125,12 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/'
+
+PASSWORD_RESET_TIMEOUT = 3600
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
@@ -136,9 +144,3 @@ EMAIL_HOST_USER = 'rakhmatovuktam006@gmail.com'
 EMAIL_HOST_PASSWORD = 'dcuozzprhubsupee' # app password
 EMAIL_USE_TLS = True
 
-
-LOGIN_URL = '/'
-LOGIN_REDIRECT_URL = '/'
-
-
-PASSWORD_RESET_TIMEOUT = 3600

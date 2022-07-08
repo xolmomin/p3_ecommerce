@@ -5,6 +5,8 @@ from django.db.models import (
     FloatField, CharField, IntegerField, Model, ImageField, CASCADE, ForeignKey, EmailField, DateTimeField, SlugField,
     SET_NULL)
 from django.utils.text import slugify
+from mptt.fields import TreeForeignKey
+from mptt.models import MPTTModel
 
 
 class UserManager(BaseUserManager):
@@ -60,11 +62,15 @@ class Image(Model):
     product = ForeignKey('app.Product', CASCADE)
 
 
-class Category(Model):
-    parent = ForeignKey('app.Category', SET_NULL, blank=True, null=True)
+class Category(MPTTModel):
+    parent = TreeForeignKey('self', CASCADE, null=True, blank=True, related_name='children')
     image = ImageField(upload_to='category/')
     name = CharField(max_length=255)
     slug = SlugField(unique=True)
+
+    # class Meta:
+    #     verbose_name = 'category'
+    #     verbose_name_plural = 'categories'
 
     def __str__(self):
         return self.name

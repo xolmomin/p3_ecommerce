@@ -1,26 +1,12 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from mptt.admin import MPTTModelAdmin, DraggableMPTTAdmin
 
-from app.models import Product, Category, User
-
-
-@admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
-    list_display = ['id', 'title', 'price', 'amount']
-    # fields = ['title', 'price', 'description']
+from app.models import Category
 
 
-#
-# admin.site.register(Product)
+class CustomMPTTModelAdmin(DraggableMPTTAdmin):
+    exclude = ('slug', )
+    # specify pixel amount for this ModelAdmin only:
+    mptt_level_indent = 20
 
-
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    search_fields = ['name']
-    list_display = ['name', 'id', 'slug', 'product_count']
-    fields = ['image', 'name']
-
-    def product_count(self, obj):
-        return obj.product_set.count()
-
-admin.site.register(User, UserAdmin)
+admin.site.register(Category, CustomMPTTModelAdmin)

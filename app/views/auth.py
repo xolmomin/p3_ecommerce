@@ -1,15 +1,17 @@
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.views import LogoutView, LoginView
+from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.utils.encoding import force_bytes, force_str
+from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from django.views.generic import FormView, TemplateView
 
-from app.forms import LoginForm, RegisterForm, ForgotPasswordForm, send_email
+from app.forms import LoginForm, RegisterForm, ForgotPasswordForm
 from app.models import User
+from app.tasks import send_to_gmail
 from app.token import account_activation_token
 
 
@@ -67,7 +69,11 @@ class RegisterPage(FormView):
 
     def form_valid(self, form):
         form.save()
-        send_email(form.data.get('email'), self.request, 'register')
+        current_site = get_current_site(self.request)
+        send_to_gmail.apply_async(
+            args=[form.data.get('email'), current_site.domain, 'register'],
+            countdown=5
+        )
         messages.add_message(
             self.request,
             level=messages.WARNING,
@@ -82,7 +88,11 @@ class ForgotPasswordPage(FormView):
     template_name = 'app/auth/forgot_password.html'
 
     def form_valid(self, form):
-        send_email(form.data.get('email'), self.request, 'forgot')
+        current_site = get_current_site(self.request)
+        send_to_gmail.apply_async(
+            args=[form.data.get('email'), current_site.domain, 'forgot'],
+            countdown=5
+        )
         return super().form_valid(form)
 
 
